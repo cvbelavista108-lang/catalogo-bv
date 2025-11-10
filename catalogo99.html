@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Catálogo Comercial Bela Vista</title>
+<script src="xlsx.full.min.js"></script>
+
+<style>
+:root {
+  --brand: #0F3562;
+  --brand-2: #176DB4;
+  --ink: #1b2430;
+  --muted: #6b7280;
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --chip: #eef2f7;
+  --accent: #ffcc00;
+  --radius: 16px;
+  --shadow: 0 6px 18px rgba(12, 21, 47, .08);
+  --ratio: 4 / 3; /* proporção padrão da imagem */
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.55 "Segoe UI", Arial, Helvetica, sans-serif;
+}
+
+/* ===== Header ===== */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  color: #fff;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow);
+}
+header img {
+  height: 56px;
+  object-fit: contain;
+}
+header h1 {
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: .3px;
+  font-size: 22px;
+}
+.tools {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.tools input[type=file],
+.filters select,
+.filters input {
+  background: #fff;
+  border: 1px solid #e3e7ee;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.tools button {
+  background: var(--accent);
+  border: none;
+  color: #111;
+  font-weight: 800;
+  border-radius: 10px;
+  padding: 9px 14px;
+  cursor: pointer;
+}
+.tools button:active { transform: scale(.98); }
+.status {
+  margin-left: auto;
+  font-size: 12px;
+  opacity: .9;
+}
+
+/* ===== Filtros ===== */
+.filters {
+  display: none;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--card);
+  margin: 14px 18px 0;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.filters label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-right: 6px;
+}
+
+/* ===== Grid / Card ===== */
+.grid {
+  padding: 22px;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .15s, box-shadow .15s;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(12, 21, 47, .12);
+}
+
+/* ===== Imagem otimizada ===== */
+.imgwrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--ratio);
+  background: #f5f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-bottom: 1px solid #e3e7ee;
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+}
+
+/* shimmer skeleton */
+.imgwrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, #eef3f9 8%, #f7faff 18%, #eef3f9 33%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer {
+  to { background-position-x: -200%; }
+}
+
+/* imagem proporcional (sem corte) */
+.imgwrap img {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain; /* garante que não corte */
+  object-position: center;
+  display: block;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  z-index: 1;
+}
+
+/* remove shimmer após carregar */
+.imgwrap.loaded::before { display: none; }
+
+/* ===== Conteúdo ===== */
+.content {
+  padding: 14px 14px 16px;
+  text-align: center;
+}
+.nome {
+  margin: 0 0 6px 0;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--brand);
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.chip {
+  background: var(--chip);
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #475569;
+}
+.meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 6px 0;
+}
+.preco {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff5bf;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-weight: 900;
+  border: 1px solid #ffe98a;
+  box-shadow: inset 0 1px 0 #fff;
+}
+
+/* ===== Footer & Print ===== */
+footer {
+  padding: 14px 18px;
+  color: #8b93a3;
+  font-size: 12px;
+  text-align: center;
+}
+@media print {
+  header, .filters, footer { display: none !important; }
+  body { background: #fff; }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+  .card { box-shadow: none; border: 1px solid #e6e9f0; }
+}
+</style>
+</head>
+
+<body>
+<header>
+  <img src="imagens/logo_belavista.jpeg" alt="Comercial Bela Vista">
+  <h1>Catálogo de Produtos</h1>
+  <div class="tools">
+    <input id="inputExcel" type="file" accept=".xlsx" />
+    <button onclick="window.print()">🖨️ Exportar PDF</button>
+  </div>
+  <span class="status" id="status">Aguardando planilha…</span>
+</header>
+
+<div class="filters" id="filters">
+  <div>
+    <label for="q">Busca</label>
+    <input id="q" type="text" placeholder="Descrição (texto) ou Referência (exata)..." />
+  </div>
+  <div>
+    <label for="cat">Grupo</label>
+    <select id="cat"><option value="">Todos</option></select>
+  </div>
+  <div>
+    <label for="sub">Subgrupo</label>
+    <select id="sub" disabled><option value="">Todos</option></select>
+  </div>
+</div>
+
+<main class="grid" id="grid"></main>
+<footer>© Comercial Bela Vista — Fotos em <code>imagens/</code> nomeadas pela <b>Referência</b>. Para PDF: Ctrl+P.</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const statusEl = $('#status'), grid = $('#grid'), filters = $('#filters');
+const q = $('#q'), catSel = $('#cat'), subSel = $('#sub'), input = $('#inputExcel');
+
+let DATA=[], VIEW=[], IDX=new Map();
+
+/* ===== Helpers ===== */
+const esc = s => String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const normKey = k => String(k).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]/g,'').toLowerCase();
+
+function parsePreco(v){
+  if(typeof v === 'number') return v;
+  if(v == null) return NaN;
+  let s = String(v).trim().replace(/[R$\s]/gi,'');
+  const hasDot = s.includes('.'), hasComma = s.includes(',');
+  if(hasDot && hasComma){
+    if(s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g,'').replace(',', '.');
+    else s = s.replace(/,/g,'');
+  } else if(hasComma && !hasDot) s = s.replace(',', '.');
+  const n = Number(s);
+  return isNaN(n) ? NaN : n;
+}
+function moneyBR(v){ const n = parsePreco(v); return isNaN(n) ? 'R$ 0,00' : n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+
+function placeholder(code){
+  const svg = encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='900'>
+      <rect width='100%' height='100%' fill='#e8eef6'/>
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='Segoe UI, Arial' font-weight='700' font-size='48' fill='#6b7280'>
+        SEM FOTO • ${esc(code)}
+      </text>
+    </svg>`);
+  return `data:image/svg+xml;charset=utf-8,${svg}`;
+}
+
+/* ===== Ler Excel ===== */
+input.addEventListener('change', async e=>{
+  const f = e.target.files[0]; if(!f) return;
+  statusEl.textContent='Lendo planilha…';
+  const buf = await f.arrayBuffer();
+  const wb  = XLSX.read(buf,{type:'array'});
+  const ws  = wb.Sheets[wb.SheetNames[0]];
+  const rows= XLSX.utils.sheet_to_json(ws,{defval:''});
+
+  DATA = rows.map(row=>{
+    const r = {}; Object.keys(row).forEach(k => r[normKey(k)] = row[k]);
+    const Codigo = (r.referencia || r.codigo || r.ref || '').toString().trim();
+    return {
+      Codigo,
+      Nome        : r.descricao || r.nome || Codigo,
+      Preco       : r.vrunitario || r.preco || r.valor,
+      Categoria   : r.grupo || r.categoria || '',
+      Subcategoria: r.subgrupo || r.subcategoria || '',
+      EAN         : r.ean || '',
+      Unidade     : r.unidade || r.um || ''
+    };
+  }).filter(x=>x.Codigo);
+
+  buildIndex();
+  applyFilters();
+  filters.style.display='flex';
+  statusEl.textContent=`Itens: ${DATA.length}`;
+});
+
+/* ===== Indexação ===== */
+function buildIndex(){
+  IDX = new Map();
+  DATA.forEach(r=>{
+    const g=(r.Categoria||'').trim(), s=(r.Subcategoria||'').trim();
+    if(!IDX.has(g)) IDX.set(g,new Set());
+    if(s) IDX.get(g).add(s);
+  });
+  catSel.innerHTML = `<option value="">Todos</option>` + [...IDX.keys()].filter(Boolean).sort()
+    .map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
+  subSel.innerHTML = `<option value="">Todos</option>`; subSel.disabled = true;
+}
+catSel.addEventListener('change', ()=>{
+  const g = catSel.value;
+  if(!g){ subSel.innerHTML=`<option value="">Todos</option>`; subSel.disabled=true; }
+  else{
+    const subs = [...(IDX.get(g)||new Set())].sort();
+    subSel.innerHTML = `<option value="">Todos</option>` + subs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    subSel.disabled = false;
+  }
+  applyFilters();
+});
+[q, subSel].forEach(el=>el.addEventListener('input', applyFilters));
+
+/* ===== Filtro com código exato ===== */
+function applyFilters(){
+  const raw = (q.value||'').trim(), term = raw.toLowerCase();
+  const g = catSel.value, s = subSel.value;
+  const exactHit = term ? DATA.some(r => (r.Codigo||'').toString().toLowerCase() === term) : false;
+
+  VIEW = DATA.filter(r=>{
+    const nome = (r.Nome||'').toLowerCase();
+    const cod  = (r.Codigo||'').toString().toLowerCase();
+    const hitQ = !term ? true : exactHit ? (cod === term) : (nome.includes(term));
+    const hitG = !g || (r.Categoria||'') === g;
+    const hitS = !s || (r.Subcategoria||'') === s;
+    return hitQ && hitG && hitS;
+  });
+
+  render(VIEW);
+}
+
+/* ===== Renderização ===== */
+function render(rows){
+  grid.innerHTML=''; let ok=0, miss=0;
+  rows.forEach(p=>{
+    const card = document.createElement('div'); card.className='card';
+    const wrp  = document.createElement('div'); wrp.className='imgwrap';
+
+    // fallback .jpg → .jpeg → .png
+    const img = document.createElement('img'); img.alt = p.Codigo; img.loading='lazy'; img.decoding='async';
+    const exts = ['jpg','jpeg','png']; let i=0;
+    function tryNext(){ img.src = `imagens/${p.Codigo}.${exts[i++]}`; }
+    img.onerror = ()=> i<exts.length ? tryNext() : (img.src = placeholder(p.Codigo), miss++, setStatus());
+    img.onload  = ()=>{ wrp.classList.add('loaded'); ok++; setStatus(); };
+    tryNext();
+    wrp.appendChild(img);
+
+    const ct = document.createElement('div'); ct.className='content';
+    ct.innerHTML = `
+      <p class="nome">${esc(p.Nome)}</p>
+      <div class="chips">
+        ${p.Categoria?`<span class="chip">${esc(p.Categoria)}</span>`:''}
+        ${p.Subcategoria?`<span class="chip">${esc(p.Subcategoria)}</span>`:''}
+        <span class="chip">COD ${esc(p.Codigo)}</span>
+      </div>
+      <div class="meta">
+        ${p.EAN?`EAN: ${esc(p.EAN)} &nbsp;•&nbsp;`:''}
+        ${p.Unidade?`UN: ${esc(p.Unidade)}`:''}
+      </div>
+      <div class="preco">${moneyBR(p.Preco)}</div>
+    `;
+    card.appendChild(wrp); card.appendChild(ct); grid.appendChild(card);
+  });
+
+  function setStatus(){ statusEl.textContent = `Itens: ${DATA.length} • Exibidos: ${rows.length} • Imagens ok: ${ok} • Sem foto: ${miss}`; }
+  setStatus();
+}
+</script>
+</body>
+</html>
